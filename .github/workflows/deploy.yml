@@ -35,7 +35,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Docker Buildx
-      uses: actions/configure-pages-artifact@v3 # Sets up advanced Docker builder features
+      uses: docker/setup-buildx-action@v3 # Sets up advanced Docker builder features
 
     - name: Build Local Docker Image
       run: |
