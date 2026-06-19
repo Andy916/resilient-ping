@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # Job 1: Compile and Test the Java Application
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Run Unit Tests
+      run: mvn clean test
+
+  # Job 2: Verify the Docker Build works flawlessly
+  build-image:
+    needs: test # Only run this if the tests pass!
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: actions/configure-pages-artifact@v3 # Sets up advanced Docker builder features
+
+    - name: Build Local Docker Image
+      run: |
+        docker build -t resilient-ping:latest .
