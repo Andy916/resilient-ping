@@ -34,3 +34,9 @@ build/
 target/
 .wsl/
 *.jar
+
+# Ignore local Terraform state and binaries
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl

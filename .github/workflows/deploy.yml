@@ -54,3 +54,37 @@ jobs:
         tags: |
           andyhatt/resilient-ping:latest
           andyhatt/resilient-ping:${{ github.sha }}
+
+    - name: Deploy to EC2 via AWS SSM (Keyless)
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION: "us-east-2"
+          run: |
+            # 1. Install AWS CLI on the runner
+            sudo apt-get update && sudo apt-get install -y awscli
+
+            # 2. Dynamically fetch the physical Instance ID of your server
+            INSTANCE_ID=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=ResilientPingServer" "Name=instance-state-name,Values=running" \
+              --query "Reservations[0].Instances[0].InstanceId" \
+              --output text)
+
+            echo "Targeting EC2 Instance ID: $INSTANCE_ID"
+
+            # 3. Send the deployment shell script via AWS SSM
+            aws ssm send-command \
+              --instance-ids "$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --comment "Deploying updated Docker app container" \
+              --parameters 'commands=[
+                "sudo yum update -y",
+                "sudo yum install -y docker",
+                "sudo systemctl start docker",
+                "sudo systemctl enable docker",
+                "sudo docker pull andyhatt/resilient-ping:latest",
+                "sudo docker stop resilient-app || true",
+                "sudo docker rm resilient-app || true",
+                "sudo docker run -d --name resilient-app -p 8080:8080 andyhatt/resilient-ping:latest"
+              ]' \
+              --output text
