@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resilient-ping-deployment
+  labels:
+    app: resilient-ping
+spec:
+  replicas: 2  # This ensures 2 copies are always running
+  selector:
+    matchLabels:
+      app: resilient-ping
+  template:
+    metadata:
+      labels:
+        app: resilient-ping
+    spec:
+      containers:
+      - name: ping-container
+        # Replace this with your actual Docker Hub repository/image name
+        image: docker.io/andyhatt/resilient-ping:latest 
+        ports:
+        - containerPort: 80
